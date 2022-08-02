@@ -17,8 +17,8 @@ public static partial class SentrySdk
         options.AutoSessionTracking = true;
         options.IsGlobalModeEnabled = true;
 
-        // // "Best" mode throws permission exception on Android -- TODO: does it on iOS?
-        // options.DetectStartupTime = StartupTimeDetectionMode.Fast;
+        // "Best" mode throws not implemented exception on Android
+        options.DetectStartupTime = StartupTimeDetectionMode.Fast;
 
         // Now initialize the Cocoa SDK
         SentryCocoa.SentryOptions? cocoaOptions = null;
