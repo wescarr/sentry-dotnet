@@ -30,7 +30,8 @@ internal class SentryMauiInitializer : IMauiInitializeService
         var binder = services.GetRequiredService<MauiEventsBinder>();
         binder.BindMauiEvents();
 
-#if IOS || MACCATALYST
+#if MACCATALYST
+        // TODO: Remove this after we enable MacCatalyst in Sentry core.  (We already set it for iOS)
         // Workaround for https://github.com/xamarin/xamarin-macios/issues/15252
         ObjCRuntime.Runtime.MarshalManagedException += (_, args) =>
         {

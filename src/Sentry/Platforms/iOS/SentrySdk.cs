@@ -20,6 +20,12 @@ public static partial class SentrySdk
         // "Best" mode throws not implemented exception on Android
         options.DetectStartupTime = StartupTimeDetectionMode.Fast;
 
+        // Workaround for https://github.com/xamarin/xamarin-macios/issues/15252
+        ObjCRuntime.Runtime.MarshalManagedException += (_, args) =>
+        {
+            args.ExceptionMode = ObjCRuntime.MarshalManagedExceptionMode.UnwindNativeCode;
+        };
+
         // Now initialize the Cocoa SDK
         SentryCocoa.SentryOptions? cocoaOptions = null;
         SentryCocoa.SentrySDK.StartWithConfigureOptions(o =>
