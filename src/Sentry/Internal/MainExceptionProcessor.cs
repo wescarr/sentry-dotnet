@@ -30,6 +30,7 @@ namespace Sentry.Internal
             MoveExceptionExtrasToEvent(sentryEvent, sentryExceptions);
 
             sentryEvent.SentryExceptions = sentryExceptions;
+            sentryEvent.DebugImages = SentryStackTraceFactoryAccessor().DebugImages();
         }
 
         // SentryException.Extra is not supported by Sentry yet.

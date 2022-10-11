@@ -142,6 +142,14 @@ namespace Sentry
         /// </summary>
         public string? AddressMode { get; set; }
 
+        /// <summary>
+        /// The optional Function Id.<br/>
+        /// This is derived from the `MetadataToken`, and should be the record id
+        /// of a `MethodDef`.<br/>
+        /// This should be a string with a hexadecimal number that includes a <b>0x</b> prefix.<br/>
+        /// </summary>
+        public string? FunctionId { get; set; }
+
         /// <inheritdoc />
         public void WriteTo(Utf8JsonWriter writer, IDiagnosticLogger? logger)
         {
@@ -166,6 +174,7 @@ namespace Sentry
             writer.WriteStringIfNotWhiteSpace("instruction_addr", InstructionAddress);
             writer.WriteNumberIfNotNull("instruction_offset", InstructionOffset);
             writer.WriteStringIfNotWhiteSpace("addr_mode", AddressMode);
+            writer.WriteStringIfNotWhiteSpace("function_id", FunctionId);
 
             writer.WriteEndObject();
         }
@@ -217,6 +226,7 @@ namespace Sentry
             var instructionAddress = json.GetPropertyOrNull("instruction_addr")?.GetString();
             var instructionOffset = json.GetPropertyOrNull("instruction_offset")?.GetInt64();
             var addressMode = json.GetPropertyOrNull("addr_mode")?.GetString();
+            var functionId = json.GetPropertyOrNull("function_id")?.GetString();
 
             return new SentryStackFrame
             {
@@ -239,6 +249,7 @@ namespace Sentry
                 InstructionAddress = instructionAddress,
                 InstructionOffset = instructionOffset,
                 AddressMode = addressMode,
+                FunctionId = functionId,
             };
         }
     }

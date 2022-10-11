@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Text.RegularExpressions;
 using Sentry.Internal.Extensions;
@@ -15,6 +18,9 @@ namespace Sentry.Extensibility
     public class SentryStackTraceFactory : ISentryStackTraceFactory
     {
         private readonly SentryOptions _options;
+
+        private Dictionary<Guid, Int32> _debugImageIndexByModule = new Dictionary<Guid, Int32>();
+        private List<DebugImage> _debugImages = new List<DebugImage>();
 
         /*
          *  NOTE: While we could improve these regexes, doing so might break exception grouping on the backend.
@@ -35,6 +41,16 @@ namespace Sentry.Extensibility
         /// Creates an instance of <see cref="SentryStackTraceFactory"/>.
         /// </summary>
         public SentryStackTraceFactory(SentryOptions options) => _options = options;
+
+        /// <summary>
+        /// Returns a list of <see cref="DebugImage" />s referenced from the previously processed <see cref="Exception" />s.
+        /// </summary>
+        /// <returns>A list of referenced debug images.</returns>
+        public virtual List<DebugImage>? DebugImages()
+        {
+            // create a shallow copy, as we want to still mutate our local copy
+            return _debugImages.ToList();
+        }
 
         /// <summary>
         /// Creates a <see cref="SentryStackTrace" /> from the optional <see cref="Exception" />.
@@ -187,6 +203,24 @@ namespace Sentry.Extensibility
                 }
 
                 AttributeReader.TryGetProjectDirectory(method.Module.Assembly, out projectPath);
+
+                var moduleIdx = GetModuleIndex(method.Module);
+                if (moduleIdx != null)
+                {
+                    frame.AddressMode = String.Format("rel:{0}", moduleIdx);
+                }
+
+                var token = method.MetadataToken;
+                // The top byte is the token type, the lower three bytes are the record id.
+                // See: https://docs.microsoft.com/en-us/previous-versions/dotnet/netframework-4.0/ms404456(v=vs.100)#metadata-token-structure
+                var tokenType = token & 0xff000000;
+                // See https://docs.microsoft.com/en-us/dotnet/framework/unmanaged-api/metadata/cortokentype-enumeration
+                if (tokenType == 0x06000000)
+                {
+                    var recordId = token & 0x00ffffff;
+
+                    frame.FunctionId = String.Format("0x{0:x}", recordId);
+                }
             }
 
             frame.ConfigureAppFrame(_options);
@@ -206,7 +240,7 @@ namespace Sentry.Extensibility
             var ilOffset = stackFrame.GetILOffset();
             if (ilOffset != StackFrame.OFFSET_UNKNOWN)
             {
-                frame.InstructionOffset = ilOffset;
+                frame.InstructionAddress = String.Format("0x{0:x}", ilOffset);
             }
 
             var lineNo = stackFrame.GetFileLineNumber();
@@ -238,6 +272,84 @@ namespace Sentry.Extensibility
 
             return frame;
         }
+
+
+        private Int32? GetModuleIndex(Module module)
+        {
+            var id = module.ModuleVersionId;
+            Int32 idx = 0;
+
+            if (_debugImageIndexByModule.TryGetValue(id, out idx))
+            {
+                return idx;
+            }
+            idx = _debugImages.Count;
+
+            var codeFile = module.FullyQualifiedName;
+            if (!File.Exists(codeFile))
+            {
+                return null;
+            }
+            using var stream = File.OpenRead(codeFile);
+            var peReader = new PEReader(stream);
+
+
+            var headers = peReader.PEHeaders;
+            var peHeader = headers.PEHeader;
+
+            String? codeId = null;
+            if (peHeader != null)
+            {
+                codeId = String.Format("{0:X8}{1:x}", headers.CoffHeader.TimeDateStamp, peHeader.SizeOfImage);
+            }
+
+            String? debugId = null;
+            String? debugFile = null;
+            String? debugChecksum = null;
+
+            var debugDirs = peReader.ReadDebugDirectory();
+            foreach (var entry in debugDirs)
+            {
+                if (entry.Type == DebugDirectoryEntryType.PdbChecksum)
+                {
+                    var checksum = peReader.ReadPdbChecksumDebugDirectoryData(entry);
+                    debugChecksum = String.Format("{0}:{1:x}", checksum.AlgorithmName, checksum.Checksum);
+                }
+                if (!entry.IsPortableCodeView)
+                {
+                    continue;
+                }
+                var codeView = peReader.ReadCodeViewDebugDirectoryData(entry);
+
+                // Together 16B of the Guid concatenated with 4B of the TimeDateStamp field of the entry form a PDB ID that
+                // should be used to match the PE/COFF image with the associated PDB (instead of Guid and Age).
+                // Matching PDB ID is stored in the #Pdb stream of the .pdb file.
+                // See https://github.com/dotnet/runtime/blob/main/docs/design/specs/PE-COFF.md#codeview-debug-directory-entry-type-2
+                debugId = String.Format("{0}-{1:x}", codeView.Guid, entry.Stamp);
+                debugFile = codeView.Path;
+            }
+
+
+            // well, we are out of luck :-(
+            if (debugId == null)
+            {
+                return null;
+            }
+
+            _debugImages.Add(new DebugImage
+            {
+                Type = "pe_dotnet",
+                CodeId = codeId,
+                CodeFile = codeFile,
+                DebugId = debugId,
+                DebugChecksum = debugChecksum,
+                DebugFile = debugFile,
+            });
+            _debugImageIndexByModule.Add(id, idx);
+
+            return idx;
+        }
+
 
         /// <summary>
         /// Get a <see cref="MethodBase"/> from <see cref="StackFrame"/>.
