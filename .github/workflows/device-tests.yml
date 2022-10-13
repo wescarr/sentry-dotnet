@@ -79,7 +79,9 @@ jobs:
       - name: Create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
         timeout-minutes: 30
-        uses: reactivecircus/android-emulator-runner@d7b53ddc6e44254e1f4cf4a6ad67345837027a66 # pin@v2
+        uses: mattjohnsonpint/android-emulator-runner@53560f13230daa3d2379c07fc5d390957e6783da
+        # TODO: Switch back to reactivecircus/android-emulator-runner when PR is merged and released
+        #       https://github.com/ReactiveCircus/android-emulator-runner/pull/276
         with:
           api-level: ${{ matrix.api-level }}
           # We don't need the Google APIs, but the default images are not available for 32+
@@ -94,7 +96,9 @@ jobs:
 
       - name: Run Tests
         timeout-minutes: 30
-        uses: reactivecircus/android-emulator-runner@d7b53ddc6e44254e1f4cf4a6ad67345837027a66 # pin@v2
+        uses: mattjohnsonpint/android-emulator-runner@53560f13230daa3d2379c07fc5d390957e6783da
+        # TODO: Switch back to reactivecircus/android-emulator-runner when PR is merged and released
+        #       https://github.com/ReactiveCircus/android-emulator-runner/pull/276
         with:
           api-level: ${{ matrix.api-level }}
           # We don't need the Google APIs, but the default images are not available for 32+
