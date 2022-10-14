@@ -41,7 +41,7 @@ jobs:
   android:
     needs: [build]
     name: Run Android API-${{ matrix.api-level }} Test
-    runs-on: macos-latest # MacOS is required for the emulator, per https://github.com/ReactiveCircus/android-emulator-runner/blob/main/README.md
+    runs-on: macos-12 # MacOS is required for the emulator, per https://github.com/ReactiveCircus/android-emulator-runner/blob/main/README.md
     strategy:
       fail-fast: false
       matrix:
