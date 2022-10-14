@@ -63,7 +63,19 @@ jobs:
         run: dotnet tool install Microsoft.DotNet.XHarness.CLI --global --version "1.*-*"
 
       # Cached AVD setup per https://github.com/ReactiveCircus/android-emulator-runner/blob/main/README.md
-      # (We don't use Gradle so we can skip that step)
+      # Note: The Gradle cache is required for the AVD cache to work correctly.
+
+      - name: Gradle cache
+        uses: gradle/gradle-build-action@3fdd6f3efd56a322d1134aa883bcde16d467f02c
+
+      - name: AVD cache
+        uses: actions/cache@v3
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ matrix.api-level }}
 
       - name: Create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
