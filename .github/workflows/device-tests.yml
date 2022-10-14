@@ -63,23 +63,12 @@ jobs:
         run: dotnet tool install Microsoft.DotNet.XHarness.CLI --global --version "1.*-*"
 
       # Cached AVD setup per https://github.com/ReactiveCircus/android-emulator-runner/blob/main/README.md
-
-      - name: Gradle cache
-        uses: gradle/gradle-build-action@3fdd6f3efd56a322d1134aa883bcde16d467f02c
-
-      - name: AVD cache
-        uses: actions/cache@v3
-        id: avd-cache
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-          key: avd-${{ matrix.api-level }}
+      # (We don't use Gradle so we can skip that step)
 
       - name: Create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
         timeout-minutes: 30
-        uses: mattjohnsonpint/android-emulator-runner@21fd8068542c91f79c05ef6feeb53dc8060c65d1
+        uses: mattjohnsonpint/android-emulator-runner@6660ec2b55b905deb5a36e169ce498e5aceec2a9
         with:
           api-level: ${{ matrix.api-level }}
           # We don't need the Google APIs, but the default images are not available for 32+
@@ -94,7 +83,7 @@ jobs:
 
       - name: Run Tests
         timeout-minutes: 30
-        uses: mattjohnsonpint/android-emulator-runner@21fd8068542c91f79c05ef6feeb53dc8060c65d1
+        uses: mattjohnsonpint/android-emulator-runner@6660ec2b55b905deb5a36e169ce498e5aceec2a9
         with:
           api-level: ${{ matrix.api-level }}
           # We don't need the Google APIs, but the default images are not available for 32+
