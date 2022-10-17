@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using Sentry.Extensibility;
 using Sentry.Integrations;
+using Sentry.Internal.Etw;
 
 namespace Sentry.Internal.DiagnosticSource
 {
@@ -9,6 +10,7 @@ namespace Sentry.Internal.DiagnosticSource
     {
         private SentryDiagnosticSubscriber? _subscriber;
         private IDisposable? _diagnosticListener;
+        private SqlEventListener? _sqlEventListener;
 
         public void Register(IHub hub, SentryOptions options)
         {
@@ -19,6 +21,7 @@ namespace Sentry.Internal.DiagnosticSource
                 return;
             }
 
+            _sqlEventListener = new SqlEventListener();
             _subscriber = new SentryDiagnosticSubscriber(hub, options);
             _diagnosticListener = DiagnosticListener.AllListeners.Subscribe(_subscriber);
         }
