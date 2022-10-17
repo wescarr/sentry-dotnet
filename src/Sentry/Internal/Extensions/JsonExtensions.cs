@@ -159,34 +159,35 @@ namespace Sentry.Internal.Extensions
             IDiagnosticLogger? logger,
             bool includeNullValues = true)
         {
-            if (dic is not null)
+            if (dic is null)
             {
-                writer.WriteStartObject();
+                writer.WriteNullValue();
+                return;
+            }
 
-                if (includeNullValues)
+            writer.WriteStartObject();
+
+            var ordered = dic.OrderBy(_ => _.Key, StringComparer.Ordinal);
+
+            if (includeNullValues)
+            {
+                foreach (var (key, value) in ordered)
                 {
-                    foreach (var (key, value) in dic)
+                    writer.WriteDynamic(key, value, logger);
+                }
+            }
+            else
+            {
+                foreach (var (key, value) in ordered)
+                {
+                    if (value is not null)
                     {
                         writer.WriteDynamic(key, value, logger);
                     }
                 }
-                else
-                {
-                    foreach (var (key, value) in dic)
-                    {
-                        if (value is not null)
-                        {
-                            writer.WriteDynamic(key, value, logger);
-                        }
-                    }
-                }
+            }
 
-                writer.WriteEndObject();
-            }
-            else
-            {
-                writer.WriteNullValue();
-            }
+            writer.WriteEndObject();
         }
 
         public static void WriteStringDictionaryValue(
