@@ -26,13 +26,13 @@ public class SentryEventTests
             Request = new Request { Method = "POST" },
             Contexts = new Contexts
             {
-                ["context_key"] = "context_value",
                 [".NET Framework"] = new Dictionary<string, string>
                 {
                     [".NET Framework"] = "\"v2.0.50727\", \"v3.0\", \"v3.5\"",
                     [".NET Framework Client"] = "\"v4.8\", \"v4.0.0.0\"",
                     [".NET Framework Full"] = "\"v4.8\""
-                }
+                },
+                ["context_key"] = "context_value"
             },
             Sdk = new SdkVersion { Name = "SDK-test", Version = "1.1.1" },
             Environment = "environment",
