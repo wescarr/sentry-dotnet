@@ -26,7 +26,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.10" />
     <PackageReference Include="Verify.AspNetCore" Version="2.0.0-beta.4" />
-    <PackageReference Include="Verify.Http" Version="3.0.0-beta.5" />
+    <PackageReference Include="Verify.Http" Version="3.0.0-beta.6" />
   </ItemGroup>
 
   <ItemGroup>
