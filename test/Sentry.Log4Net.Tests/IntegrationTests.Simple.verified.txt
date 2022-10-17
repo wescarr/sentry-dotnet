@@ -1,4 +1,4 @@
-[
+﻿[
   {
     Header: {
       event_id: Guid_1,
@@ -18,8 +18,6 @@
             },
             Logger: IntegrationTests,
             Platform: csharp,
-            SentryExceptions: [],
-            SentryThreads: [],
             Level: error,
             Request: {},
             Contexts: {},

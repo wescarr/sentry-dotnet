@@ -1,4 +1,4 @@
-{
+﻿{
   diagnosticLoggerEntries: [
     {
       Level: error,

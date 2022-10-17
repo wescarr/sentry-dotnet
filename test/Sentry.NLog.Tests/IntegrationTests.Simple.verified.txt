@@ -1,4 +1,4 @@
-[
+﻿[
   {
     Header: {
       event_id: Guid_1,
@@ -39,7 +39,6 @@
                 Mechanism: {}
               }
             ],
-            SentryThreads: [],
             Level: error,
             Request: {},
             Contexts: {},

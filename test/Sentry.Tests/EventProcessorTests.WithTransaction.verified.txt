@@ -1,4 +1,4 @@
-[
+﻿[
   {
     Header: {
       event_id: Guid_1,
@@ -17,8 +17,6 @@
               Message: TheMessage
             },
             Platform: csharp,
-            SentryExceptions: [],
-            SentryThreads: [],
             Level: info,
             TransactionName: my transaction,
             Request: {},
