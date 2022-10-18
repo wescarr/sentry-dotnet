@@ -93,14 +93,14 @@ jobs:
       #     script: echo "Generated AVD snapshot for caching."
 
       - name: List Android System Images
-        run: $ANDROID_HOME/tools/bin/sdkmanager --list | grep system-images;android-{{ matrix.api-level }}
+        run: $ANDROID_HOME/tools/bin/sdkmanager --list | grep system-images;android-${{ matrix.api-level }}
 
       - name: Install Android System Image
         if: matrix.api-level >= 31
-        run: $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-{{ matrix.api-level }};aosp_atd;arm64-v8a"
+        run: $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-${{ matrix.api-level }};aosp_atd;arm64-v8a"
 
       - name: List Android System Images
-        run: $ANDROID_HOME/tools/bin/sdkmanager --list | grep system-images;android-{{ matrix.api-level }}
+        run: $ANDROID_HOME/tools/bin/sdkmanager --list | grep system-images;android-${{ matrix.api-level }}
 
       - name: Run Tests
         timeout-minutes: 30
