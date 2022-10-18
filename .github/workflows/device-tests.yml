@@ -12,7 +12,7 @@ jobs:
   list-system-images:
     runs-on: macos-12
     steps:
-      - run: sdkmanager --list | grep system-images
+      - run: $ANDROID_HOME/tools/bin/sdkmanager --list | grep system-images
 
 
   # build:
