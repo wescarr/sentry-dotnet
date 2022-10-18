@@ -84,6 +84,7 @@ jobs:
         with:
           api-level: ${{ matrix.api-level }}
           target: ${{ matrix.api-level >= 30 && 'aosp_atd' || 'default' }}
+          channel: ${{ matrix.api-level >= 30 && 'canary' || 'stable' }}
           force-avd-creation: false
           ram-size: 2048M
           arch: x86_64
@@ -97,6 +98,7 @@ jobs:
         with:
           api-level: ${{ matrix.api-level }}
           target: ${{ matrix.api-level >= 30 && 'aosp_atd' || 'default' }}
+          channel: ${{ matrix.api-level >= 30 && 'canary' || 'stable' }}
           force-avd-creation: false
           ram-size: 2048M
           arch: x86_64
