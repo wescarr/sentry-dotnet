@@ -8,119 +8,121 @@ on:
   pull_request:
 
 jobs:
-
-  list-system-images:
-    runs-on: macos-12
+  build:
+    runs-on: ubuntu-latest
     steps:
-      - run: $ANDROID_HOME/tools/bin/sdkmanager --list | grep system-images
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@b173b6ec0100793626c2d9e6b90435061f4fc3e5 # Tag: 0.11.0
 
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
-  # build:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Cancel Previous Runs
-  #       uses: styfle/cancel-workflow-action@b173b6ec0100793626c2d9e6b90435061f4fc3e5 # Tag: 0.11.0
+      - name: Setup Environment
+        uses: ./.github/actions/environment
 
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
-  #       with:
-  #         submodules: recursive
+      - name: Build Native Dependencies
+        uses: ./.github/actions/buildnative
 
-  #     - name: Setup Environment
-  #       uses: ./.github/actions/environment
+      - name: Restore .NET Dependencies
+        run: dotnet restore test/Sentry.Maui.Device.TestApp --nologo
 
-  #     - name: Build Native Dependencies
-  #       uses: ./.github/actions/buildnative
+      - name: Build Android Test App
+        run: dotnet build test/Sentry.Maui.Device.TestApp -c Release -f net6.0-android --no-restore --nologo
 
-  #     - name: Restore .NET Dependencies
-  #       run: dotnet restore test/Sentry.Maui.Device.TestApp --nologo
+      - name: Upload Android Test App
+        uses: actions/upload-artifact@v3
+        with:
+          name: device-test-android
+          if-no-files-found: error
+          path: test/Sentry.Maui.Device.TestApp/bin/Release/net6.0-android/io.sentry.dotnet.maui.device.testapp-Signed.apk
 
-  #     - name: Build Android Test App
-  #       run: dotnet build test/Sentry.Maui.Device.TestApp -c Release -f net6.0-android --no-restore --nologo
+  android:
+    needs: [build]
+    name: Run Android API-${{ matrix.api-level }} Test
+    runs-on: macos-12 # MacOS is required for the emulator, per https://github.com/ReactiveCircus/android-emulator-runner/blob/main/README.md
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [27, 28, 29, 30, 31, 32, 33]
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_NOLOGO: 1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-  #     - name: Upload Android Test App
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: device-test-android
-  #         if-no-files-found: error
-  #         path: test/Sentry.Maui.Device.TestApp/bin/Release/net6.0-android/io.sentry.dotnet.maui.device.testapp-Signed.apk
+      - name: Download test app artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: device-test-android
+          path: bin
 
-  # android:
-  #   needs: [build]
-  #   name: Run Android API-${{ matrix.api-level }} Test
-  #   runs-on: macos-12 # MacOS is required for the emulator, per https://github.com/ReactiveCircus/android-emulator-runner/blob/main/README.md
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       api-level: [27, 28, 29, 30, 31, 32, 33]
-  #   env:
-  #     DOTNET_CLI_TELEMETRY_OPTOUT: 1
-  #     DOTNET_NOLOGO: 1
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
+      - name: Install xharness
+        run: dotnet tool install Microsoft.DotNet.XHarness.CLI --global --version "1.*-*"
 
-  #     - name: Download test app artifact
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: device-test-android
-  #         path: bin
+      # Cached AVD setup per https://github.com/ReactiveCircus/android-emulator-runner/blob/main/README.md
+      # Note: The Gradle cache is required for the AVD cache to work correctly.
 
-  #     - name: Install xharness
-  #       run: dotnet tool install Microsoft.DotNet.XHarness.CLI --global --version "1.*-*"
+      # - name: Gradle cache
+      #   uses: gradle/gradle-build-action@3fdd6f3efd56a322d1134aa883bcde16d467f02c
 
-  #     # Cached AVD setup per https://github.com/ReactiveCircus/android-emulator-runner/blob/main/README.md
-  #     # Note: The Gradle cache is required for the AVD cache to work correctly.
+      # - name: AVD cache
+      #   uses: actions/cache@v3
+      #   id: avd-cache
+      #   with:
+      #     path: |
+      #       ~/.android/avd/*
+      #       ~/.android/adb*
+      #     key: avd-${{ matrix.api-level }}
 
-  #     - name: Gradle cache
-  #       uses: gradle/gradle-build-action@3fdd6f3efd56a322d1134aa883bcde16d467f02c
+      # - name: Create AVD and generate snapshot for caching
+      #   if: steps.avd-cache.outputs.cache-hit != 'true'
+      #   timeout-minutes: 30
+      #   uses: mattjohnsonpint/android-emulator-runner@6660ec2b55b905deb5a36e169ce498e5aceec2a9
+      #   with:
+      #     api-level: ${{ matrix.api-level }}
+      #     target: ${{ matrix.api-level >= 30 && 'aosp_atd' || 'default' }}
+      #     arch: arm64-v8a
+      #     force-avd-creation: false
+      #     ram-size: 2048M
+      #     arch: x86_64
+      #     disk-size: 4096M
+      #     emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+      #     script: echo "Generated AVD snapshot for caching."
 
-  #     - name: AVD cache
-  #       uses: actions/cache@v3
-  #       id: avd-cache
-  #       with:
-  #         path: |
-  #           ~/.android/avd/*
-  #           ~/.android/adb*
-  #         key: avd-${{ matrix.api-level }}
+      - name: List Android System Images
+        run: $ANDROID_HOME/tools/bin/sdkmanager --list | grep system-images;android-{{ matrix.api-level }}
 
-  #     - name: Create AVD and generate snapshot for caching
-  #       if: steps.avd-cache.outputs.cache-hit != 'true'
-  #       timeout-minutes: 30
-  #       uses: mattjohnsonpint/android-emulator-runner@6660ec2b55b905deb5a36e169ce498e5aceec2a9
-  #       with:
-  #         api-level: ${{ matrix.api-level }}
-  #         target: ${{ matrix.api-level >= 30 && 'aosp_atd' || 'default' }}
-  #         channel: ${{ matrix.api-level >= 30 && 'canary' || 'stable' }}
-  #         force-avd-creation: false
-  #         ram-size: 2048M
-  #         arch: x86_64
-  #         disk-size: 4096M
-  #         emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-  #         script: echo "Generated AVD snapshot for caching."
+      - name: Install Android System Image
+        if: matrix.api-level >= 31
+        run: $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-{{ matrix.api-level }};aosp_atd;arm64-v8a"
 
-  #     - name: Run Tests
-  #       timeout-minutes: 30
-  #       uses: mattjohnsonpint/android-emulator-runner@6660ec2b55b905deb5a36e169ce498e5aceec2a9
-  #       with:
-  #         api-level: ${{ matrix.api-level }}
-  #         target: ${{ matrix.api-level >= 30 && 'aosp_atd' || 'default' }}
-  #         channel: ${{ matrix.api-level >= 30 && 'canary' || 'stable' }}
-  #         force-avd-creation: false
-  #         ram-size: 2048M
-  #         arch: x86_64
-  #         disk-size: 4096M
-  #         emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-  #         script: xharness android test --output-directory=./test_output --app=bin/io.sentry.dotnet.maui.device.testapp-Signed.apk --package-name=io.sentry.dotnet.maui.device.testapp
+      - name: List Android System Images
+        run: $ANDROID_HOME/tools/bin/sdkmanager --list | grep system-images;android-{{ matrix.api-level }}
 
-  #     - name: Create Test Report
-  #       if: success() || failure()
-  #       run: scripts/parse-xunit2-xml.ps1 ./test_output/TestResults.xml | Out-File $env:GITHUB_STEP_SUMMARY
-  #       shell: pwsh
+      - name: Run Tests
+        timeout-minutes: 30
+        uses: mattjohnsonpint/android-emulator-runner@6660ec2b55b905deb5a36e169ce498e5aceec2a9
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: ${{ matrix.api-level >= 30 && 'aosp_atd' || 'default' }}
+          arch: arm64-v8a
+          force-avd-creation: false
+          ram-size: 2048M
+          disk-size: 4096M
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: xharness android test --output-directory=./test_output --app=bin/io.sentry.dotnet.maui.device.testapp-Signed.apk --package-name=io.sentry.dotnet.maui.device.testapp
 
-  #     - name: Upload results
-  #       if: success() || failure()
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: device-test-android-${{ matrix.api-level }}-results
-  #         path: test_output
+      - name: Create Test Report
+        if: success() || failure()
+        run: scripts/parse-xunit2-xml.ps1 ./test_output/TestResults.xml | Out-File $env:GITHUB_STEP_SUMMARY
+        shell: pwsh
+
+      - name: Upload results
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: device-test-android-${{ matrix.api-level }}-results
+          path: test_output
