@@ -11,9 +11,7 @@ runs:
         echo "DOTNET_NOLOGO=1" >> $GITHUB_ENV
 
     - name: Set Java Version
-      uses: actions/setup-java@fbb269240edd041d3dd462703f1111022f1af4de # PR#390
-      #TODO: Return to latest version tag after next release that includes the PR
-      #      https://github.com/actions/setup-java/pull/390
+      uses: actions/setup-java@de1bb2b0c5634f0fc4438d7aa9944e68f9bf86cc # pin@v3
       with:
         distribution: 'temurin'
         java-version: '11'
