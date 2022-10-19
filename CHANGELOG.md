@@ -1,8 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+- Update bundled Android SDK to version 6.5.0 ([#1984](https://github.com/getsentry/sentry-dotnet/pull/1984))
+- Update bundled Cocoa SDK to version 7.28.0 ([#1988](https://github.com/getsentry/sentry-dotnet/pull/1988))
+- Allow custom processors to be added as a scoped dependency ([#1979](https://github.com/getsentry/sentry-dotnet/pull/1979))
+- Support DI for custom transaction processors ([#1993](https://github.com/getsentry/sentry-dotnet/pull/1993))
+
+### Fixes
+
+- Split Android and Cocoa bindings into separate projects ([#1983](https://github.com/getsentry/sentry-dotnet/pull/1983))
+  - NuGet package `Sentry` now depends on `Sentry.Bindings.Android` for `net6.0-android` targets.
+  - NuGet package `Sentry` now depends on `Sentry.Bindings.Cocoa` for `net6.0-ios` and `net6.0-maccatalyst` targets.
+- Exclude EF error message from logging ([#1980](https://github.com/getsentry/sentry-dotnet/pull/1980))
+- Ensure logs with lower levels are captured by `Sentry.Extensions.Logging` ([#1992](https://github.com/getsentry/sentry-dotnet/pull/1992))
+- Fix bug with pre-formatted strings passed to diagnostic loggers ([#2004](https://github.com/getsentry/sentry-dotnet/pull/2004))
+
 ## 3.22.0
 
-## Features
+### Features
 
 - `SentryOptions.AttachStackTrace` is now enabled by default. ([#1907](https://github.com/getsentry/sentry-dotnet/pull/1907))
 - Update Sentry Android SDK to version 6.4.1 ([#1911](https://github.com/getsentry/sentry-dotnet/pull/1911))
@@ -15,7 +33,7 @@
 - Support more types for message template tags in SentryLogger ([#1945](https://github.com/getsentry/sentry-dotnet/pull/1945))
 - Support Dynamic Sampling ([#1953](https://github.com/getsentry/sentry-dotnet/pull/1953))
 
-## Fixes
+### Fixes
 
 - Reduce lock contention when sampling ([#1915](https://github.com/getsentry/sentry-dotnet/pull/1915))
 - Dont send transaction for OPTIONS web request ([#1921](https://github.com/getsentry/sentry-dotnet/pull/1921))
@@ -34,7 +52,7 @@
 
 _Includes Sentry.Maui Preview 3_
 
-## Features
+### Features
 
 - Add ISentryTransactionProcessor ([#1862](https://github.com/getsentry/sentry-dotnet/pull/1862))
 - Added 'integrations' to SdkVersion ([#1820](https://github.com/getsentry/sentry-dotnet/pull/1820))
