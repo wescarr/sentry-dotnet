@@ -122,7 +122,7 @@ namespace Sentry.Internal
             // stack traces needs to modify the list of debug images at the same
             // time!
             var debugImages = SentryStackTraceFactoryAccessor().DebugImages() ?? new List<DebugImage>();
-            if (@event.DebugImages != null)
+            if (@event.DebugImages != null && !debugImages.SequenceEqual(@event.DebugImages))
             {
                 debugImages.AddRange(@event.DebugImages);
             }

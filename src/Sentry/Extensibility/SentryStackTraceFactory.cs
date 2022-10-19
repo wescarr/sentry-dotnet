@@ -313,7 +313,8 @@ namespace Sentry.Extensibility
                 if (entry.Type == DebugDirectoryEntryType.PdbChecksum)
                 {
                     var checksum = peReader.ReadPdbChecksumDebugDirectoryData(entry);
-                    debugChecksum = String.Format("{0}:{1:x}", checksum.AlgorithmName, checksum.Checksum);
+                    var checksumHex = string.Concat(checksum.Checksum.Select(b => b.ToString("x2")));
+                    debugChecksum = String.Format("{0}:{1:x}", checksum.AlgorithmName, checksumHex);
                 }
                 if (!entry.IsPortableCodeView)
                 {
