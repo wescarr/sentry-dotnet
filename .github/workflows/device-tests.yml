@@ -62,6 +62,9 @@ jobs:
       - name: Install xharness
         run: dotnet tool install Microsoft.DotNet.XHarness.CLI --global --version "1.*-*"
 
+      - name: Install Haxm
+        run: brew install --cask intel-haxm
+
       # Cached AVD setup per https://github.com/ReactiveCircus/android-emulator-runner/blob/main/README.md
 
       - name: Gradle cache
