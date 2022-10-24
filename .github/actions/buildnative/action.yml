@@ -9,6 +9,7 @@ runs:
       run: echo "JAVA_HOME_11=$JAVA_HOME_11_X64" >> $GITHUB_ENV
 
     - name: Install Ninja
+      shell: bash
       run: ${{ runner.os == 'macOS' && 'brew install ninja' || runner.os == 'Windows' && 'choco install ninja' || runner.os == 'Linux' && 'apt-get install ninja-build' || '' }}
 
     - name: Build C Project
