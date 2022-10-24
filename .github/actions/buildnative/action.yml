@@ -9,9 +9,7 @@ runs:
       run: echo "JAVA_HOME_11=$JAVA_HOME_11_X64" >> $GITHUB_ENV
 
     - name: Install Ninja
-      uses: mattjohnsonpint/gha-setup-ninja@1815f2d05c2cd60c2d900f89843139b8dde09f4c
-      # TODO: Switch back to seanmiddleditch/gha-setup-ninja when PR is merged and released
-      #       https://github.com/seanmiddleditch/gha-setup-ninja/pull/15
+      run: ${{ runner.os == 'macOS' && 'brew install ninja' || runner.os == 'Windows' && 'choco install ninja' || runner.os == 'Linux' && 'apt-get install ninja-build' || '' }}
 
     - name: Build C Project
       if: runner.os == 'Linux' || runner.os == 'macOS'
