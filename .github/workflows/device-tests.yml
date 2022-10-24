@@ -64,35 +64,41 @@ jobs:
       - name: Install xharness
         run: dotnet tool install Microsoft.DotNet.XHarness.CLI --global --version "1.*-*"
 
+      - name: Install Haxm
+        run: |
+          $ANDROID_HOME/emulator/emulator -accel-check
+          brew install --cask intel-haxm
+          $ANDROID_HOME/emulator/emulator -accel-check
+
       # Cached AVD setup per https://github.com/ReactiveCircus/android-emulator-runner/blob/main/README.md
 
       - name: Gradle cache
         uses: gradle/gradle-build-action@3fbe033aaae657f011f88f29be9e65ed26bd29ef # pin@v2
 
-      - name: AVD cache
-        uses: actions/cache@v3
-        id: avd-cache
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-          key: avd-${{ matrix.api-level }}
+      # - name: AVD cache
+      #   uses: actions/cache@v3
+      #   id: avd-cache
+      #   with:
+      #     path: |
+      #       ~/.android/avd/*
+      #       ~/.android/adb*
+      #     key: avd-${{ matrix.api-level }}
 
-      - name: Create AVD and generate snapshot for caching
-        if: steps.avd-cache.outputs.cache-hit != 'true'
-        timeout-minutes: 30
-        uses: mattjohnsonpint/android-emulator-runner@6660ec2b55b905deb5a36e169ce498e5aceec2a9
-        with:
-          api-level: ${{ matrix.api-level }}
-          # We don't need the Google APIs, but the default images are not available for 32+
-          target: ${{ matrix.api-level >= 32 && 'google_apis' || 'default' }}
-          force-avd-creation: false
-          ram-size: 2048M
-          arch: x86_64
-          disk-size: 4096M
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
-          script: echo "Generated AVD snapshot for caching."
+      # - name: Create AVD and generate snapshot for caching
+      #   if: steps.avd-cache.outputs.cache-hit != 'true'
+      #   timeout-minutes: 30
+      #   uses: mattjohnsonpint/android-emulator-runner@6660ec2b55b905deb5a36e169ce498e5aceec2a9
+      #   with:
+      #     api-level: ${{ matrix.api-level }}
+      #     # We don't need the Google APIs, but the default images are not available for 32+
+      #     target: ${{ matrix.api-level >= 32 && 'google_apis' || 'default' }}
+      #     force-avd-creation: false
+      #     ram-size: 2048M
+      #     arch: x86_64
+      #     disk-size: 4096M
+      #     emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+      #     disable-animations: false
+      #     script: echo "Generated AVD snapshot for caching."
 
       - name: Run Tests
         timeout-minutes: 30
@@ -105,7 +111,7 @@ jobs:
           ram-size: 2048M
           arch: x86_64
           disk-size: 4096M
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-snapshot-save -no-window -accel on -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           script: xharness android test --output-directory=./test_output --app=bin/io.sentry.dotnet.maui.device.testapp-Signed.apk --package-name=io.sentry.dotnet.maui.device.testapp
 
