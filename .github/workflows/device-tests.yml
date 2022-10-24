@@ -64,11 +64,11 @@ jobs:
       - name: Install xharness
         run: dotnet tool install Microsoft.DotNet.XHarness.CLI --global --version "1.*-*"
 
-      - name: Install Haxm
-        run: |
-          $ANDROID_HOME/emulator/emulator -accel-check
-          brew install --cask intel-haxm
-          $ANDROID_HOME/emulator/emulator -accel-check
+      # - name: Install Haxm
+      #   run: |
+      #     $ANDROID_HOME/emulator/emulator -accel-check
+      #     brew install --cask intel-haxm
+      #     $ANDROID_HOME/emulator/emulator -accel-check
 
       # Cached AVD setup per https://github.com/ReactiveCircus/android-emulator-runner/blob/main/README.md
 
